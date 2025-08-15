@@ -1,0 +1,13 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wooden Hammer -->
+  <rect x="38" y="30" width="20" height="8" rx="3" fill="#deb887" stroke="#8d5524" stroke-width="2"/>
+  <rect x="46" y="38" width="6" height="24" rx="2" fill="#b07d45" stroke="#8d5524" stroke-width="1.5"/>
+  <!-- Screw (diagonal) -->
+  <rect x="62" y="54" width="16" height="4" rx="2" fill="#b0a18f" stroke="#7c5a2a" stroke-width="1" transform="rotate(30 70 56)"/>
+  <circle cx="76" cy="56" r="2.2" fill="#b0a18f" stroke="#7c5a2a" stroke-width="1"/>
+  <!-- Decorative wood grain -->
+  <ellipse cx="48" cy="70" rx="32" ry="10" fill="#f5deb3" opacity="0.18"/>
+  <path d="M20 40 Q48 18 76 40" stroke="#8d5524" stroke-width="2" fill="none" opacity="0.3"/>
+  <path d="M20 60 Q48 82 76 60" stroke="#8d5524" stroke-width="2" fill="none" opacity="0.3"/>
+  <text x="48" y="90" text-anchor="middle" font-size="11" font-family="serif" fill="#8d5524" font-weight="bold">WoodCraft Wonders</text>
+</svg>
