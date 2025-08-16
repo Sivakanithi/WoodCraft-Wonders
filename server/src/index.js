@@ -19,7 +19,9 @@ app.use('/uploads', express.static('uploads'))
 const PORT = process.env.PORT || 4000
 
 // Connect Mongo
-mongoose.connect(process.env.MONGO_URI, { dbName: undefined })
+const MONGO_URI = process.env.MONGO_URI
+const MONGO_DB_NAME = process.env.MONGO_DB_NAME // optional; recommended on Render
+mongoose.connect(MONGO_URI, MONGO_DB_NAME ? { dbName: MONGO_DB_NAME } : {})
   .then(()=> console.log('MongoDB connected'))
   .catch(err=> console.warn('MongoDB connection failed:', err.message, '\nProceeding without DB — some features may not work.'))
 

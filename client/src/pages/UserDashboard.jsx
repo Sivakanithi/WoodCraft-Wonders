@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../api'
 
 function ProfileSection({ bookings, onLogout }) {
   const user = JSON.parse(localStorage.getItem('user') || 'null')
@@ -30,8 +31,8 @@ export default function UserDashboard() {
   const [tab, setTab] = useState('dashboard')
 
   useEffect(() => {
-    if (!user) return
-    axios.get(import.meta.env.VITE_API_BASE + '/bookings/user', {
+      if (!user) return
+      axios.get(API_BASE + '/bookings/user', {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => setBookings(r.data))
   }, [user, token])

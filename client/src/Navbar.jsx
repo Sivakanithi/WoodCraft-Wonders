@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios'
+import { API_BASE } from './api'
 import { photos } from './assets'
 export default function Navbar() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'))
@@ -35,7 +36,7 @@ export default function Navbar() {
       try {
         setLoadingOrders(true)
         const token = localStorage.getItem('token')
-        const r = await axios.get(import.meta.env.VITE_API_BASE + '/bookings/user', {
+  const r = await axios.get(API_BASE + '/bookings/user', {
           headers: { Authorization: `Bearer ${token}` }
         })
         // show latest 3

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../../api'
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
@@ -7,7 +8,7 @@ export default function AdminProducts() {
   const token = localStorage.getItem('token')
 
   function load() {
-    axios.get(import.meta.env.VITE_API_BASE + '/products').then(r => setProducts(r.data))
+    axios.get(API_BASE + '/products').then(r => setProducts(r.data))
   }
 
   useEffect(() => { load() }, [])
@@ -18,7 +19,7 @@ export default function AdminProducts() {
       const fd = new FormData()
       Object.entries(form).forEach(([k,v]) => fd.append(k, v))
       if (e.target.image.files[0]) fd.append('image', e.target.image.files[0])
-      await axios.post(import.meta.env.VITE_API_BASE + '/products', fd, {
+      await axios.post(API_BASE + '/products', fd, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setForm({ title: '', description: '', price: '', category: 'Doors', dimensions: '' })
@@ -32,7 +33,7 @@ export default function AdminProducts() {
 
   async function remove(id) {
     if (!confirm('Delete?')) return
-    await axios.delete(import.meta.env.VITE_API_BASE + '/products/' + id, {
+  await axios.delete(API_BASE + '/products/' + id, {
       headers: { Authorization: `Bearer ${token}` }
     })
     load()

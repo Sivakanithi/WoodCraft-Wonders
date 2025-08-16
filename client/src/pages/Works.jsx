@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../api'
 import { Link } from 'react-router-dom'
 import { categoryImages } from '../categoryImages'
 
@@ -9,7 +10,7 @@ export default function Works() {
   const [selectedCategory, setSelectedCategory] = useState(null)
 
   useEffect(() => {
-    axios.get(import.meta.env.VITE_API_BASE + '/products').then(r => setProducts(r.data))
+  axios.get(API_BASE + '/products').then(r => setProducts(r.data))
   }, [])
 
   // Category images

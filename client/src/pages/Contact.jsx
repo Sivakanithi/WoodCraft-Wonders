@@ -1,12 +1,13 @@
 
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import { API_BASE } from '../api'
 
 export default function Contact() {
   const { register, handleSubmit, reset } = useForm()
   const onSubmit = async (data) => {
     try {
-      await axios.post(import.meta.env.VITE_API_BASE + '/contact', data)
+  await axios.post(API_BASE + '/contact', data)
       alert('Message sent! We will get back to you soon.')
       reset()
     } catch (e) {

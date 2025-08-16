@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import { API_BASE } from '../api'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import Notification from '../Notification'
@@ -11,7 +12,7 @@ export default function Register() {
 
   const onSubmit = async (data) => {
     try {
-      await axios.post(import.meta.env.VITE_API_BASE + '/auth/register', data)
+  await axios.post(API_BASE + '/auth/register', data)
       setNotif({ show: true, message: 'Registration successful! Please login.', type: 'success' })
       setTimeout(() => navigate('/login'), 1200)
     } catch (e) {

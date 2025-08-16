@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../../api'
 import Notification from '../../Notification'
 
 export default function AdminBookings() {
@@ -9,17 +10,17 @@ export default function AdminBookings() {
   const token = localStorage.getItem('token')
 
   function load() {
-    axios.get(import.meta.env.VITE_API_BASE + '/bookings', {
+  axios.get(API_BASE + '/bookings', {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => setBookings(r.data))
-    axios.get(import.meta.env.VITE_API_BASE + '/products').then(r => setProducts(r.data))
+  axios.get(API_BASE + '/products').then(r => setProducts(r.data))
   }
 
   useEffect(() => { load() }, [])
 
   async function handleAction(id, action) {
     try {
-      await axios.patch(import.meta.env.VITE_API_BASE + `/bookings/${id}/${action}`, {}, {
+  await axios.patch(API_BASE + `/bookings/${id}/${action}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       })
       load()
@@ -36,7 +37,7 @@ export default function AdminBookings() {
   async function handleDelete(id) {
     if (!window.confirm('Delete this booking?')) return
     try {
-      await axios.delete(import.meta.env.VITE_API_BASE + '/bookings/' + id, {
+  await axios.delete(API_BASE + '/bookings/' + id, {
         headers: { Authorization: `Bearer ${token}` }
       })
       load()
@@ -57,12 +58,12 @@ export default function AdminBookings() {
       <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
         <input className="p-2 rounded-lg border" placeholder="Search name or email" onChange={(e)=>{
           const q = e.target.value.toLowerCase();
-          axios.get(import.meta.env.VITE_API_BASE + '/bookings', { headers: { Authorization: `Bearer ${token}` }})
+          axios.get(API_BASE + '/bookings', { headers: { Authorization: `Bearer ${token}` }})
             .then(r => setBookings(r.data.filter(b => (b.name+b.email).toLowerCase().includes(q))))
         }} />
         <select className="p-2 rounded-lg border" onChange={(e)=>{
           const val = e.target.value
-          axios.get(import.meta.env.VITE_API_BASE + '/bookings', { headers: { Authorization: `Bearer ${token}` }})
+          axios.get(API_BASE + '/bookings', { headers: { Authorization: `Bearer ${token}` }})
             .then(r => setBookings(val==='all'? r.data : r.data.filter(b => b.status===val)))
         }}>
           <option value="all">All statuses</option>

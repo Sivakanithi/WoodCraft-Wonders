@@ -1,6 +1,7 @@
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import { API_BASE } from '../api'
 import { useState } from 'react'
 import Notification from '../Notification'
 
@@ -15,7 +16,7 @@ export default function ResetPassword() {
 
   const onSubmit = async (data) => {
     try {
-      await axios.post(import.meta.env.VITE_API_BASE + '/auth/reset-password', { email: data.email, token, password: data.password })
+  await axios.post(API_BASE + '/auth/reset-password', { email: data.email, token, password: data.password })
       setNotif({ show: true, message: 'Password reset successful. Please login.', type: 'success' })
       setTimeout(()=> navigate('/login'), 1200)
     } catch {

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
+import { API_BASE } from '../api'
 import { useForm } from 'react-hook-form'
 
 export default function ProductDetails() {
@@ -10,13 +11,13 @@ export default function ProductDetails() {
   const { register, handleSubmit, reset } = useForm()
 
   useEffect(() => {
-    axios.get(import.meta.env.VITE_API_BASE + '/products/' + id).then(r => setProduct(r.data))
+    axios.get(API_BASE + '/products/' + id).then(r => setProduct(r.data))
   }, [id])
 
   const onSubmit = async (data) => {
     try {
       data.productId = id
-      await axios.post(import.meta.env.VITE_API_BASE + '/bookings', data)
+  await axios.post(API_BASE + '/bookings', data)
       alert('Booking submitted! We will contact you soon.')
       reset()
     } catch (e) {

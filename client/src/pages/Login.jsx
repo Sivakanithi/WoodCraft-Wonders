@@ -1,6 +1,7 @@
 
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import { API_BASE } from '../api'
 import { useNavigate, Link } from 'react-router-dom'
 import { useState } from 'react'
 import Notification from '../Notification'
@@ -15,7 +16,7 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await axios.post(import.meta.env.VITE_API_BASE + '/auth/login', data)
+  const res = await axios.post(API_BASE + '/auth/login', data)
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data.user))
       setNotif({ show: true, message: 'Logged in!', type: 'success' })
@@ -73,7 +74,7 @@ export default function Login() {
               <button className="btn" onClick={()=> setFpOpen(false)}>Cancel</button>
               <button className="btn btn-primary" onClick={async ()=>{
                 try {
-                  await axios.post(import.meta.env.VITE_API_BASE + '/auth/forgot-password', { email: fpEmail })
+                  await axios.post(API_BASE + '/auth/forgot-password', { email: fpEmail })
                   setNotif({ show: true, message: 'Reset link sent if email exists', type: 'success' })
                   setFpOpen(false)
                   setFpEmail('')

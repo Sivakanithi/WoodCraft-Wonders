@@ -3,6 +3,7 @@ import { Router } from 'express'
 import Booking from '../models/Booking.js'
 import Product from '../models/Product.js'
 import { sendEmail } from '../index.js'
+import { auth } from '../middleware/auth.js'
 import { renderEmail, infoTable, pill, button, orderSummaryCard, sectionCard } from '../emailTemplates.js'
 
 const router = Router()
@@ -10,11 +11,12 @@ const router = Router()
 
 // Create booking
 router.post('/', async (req, res) => {
-  const { productId, name, email, phone, message } = req.body
-  const booking = await Booking.create({ productId, name, email, phone, message })
+  try {
+    const { productId, name, email, phone, message } = req.body
+    const booking = await Booking.create({ productId, name, email, phone, message })
 
-  // email notify admin
-  const product = await Product.findById(productId)
+    // email notify admin
+    const product = await Product.findById(productId)
     const subject = `🪵 New Booking: ${product?.title || 'a product'} by ${name}`
     const adminHtml = renderEmail({
       subjectEmoji: '🪵',
@@ -34,14 +36,17 @@ router.post('/', async (req, res) => {
         ${button('Open Admin Dashboard', (process.env.ADMIN_DASHBOARD_URL || '#'))}
       `
     })
-  // Always send to admin email
-  try { await sendEmail({ subject, html: adminHtml, to: process.env.EMAIL_TO }) } catch {}
+    // Always send to admin email
+    try { await sendEmail({ subject, html: adminHtml, to: process.env.EMAIL_TO }) } catch {}
 
-  res.json(booking)
+    res.json(booking)
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create booking' })
+  }
 })
 
 // Get all bookings (admin)
-router.get('/', async (_req, res) => {
+router.get('/', auth('admin'), async (_req, res) => {
   const list = await Booking.find().sort({ createdAt: -1 })
   res.json(list)
 })
@@ -50,11 +55,10 @@ router.get('/', async (_req, res) => {
 router.get('/user', async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1]
   if (!token) return res.status(401).json({ error: 'Unauthorized' })
-  let userId, userEmail
+  let userEmail
   try {
     const jwt = (await import('jsonwebtoken')).default
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    userId = decoded.id
     userEmail = decoded.email
   } catch {
     return res.status(401).json({ error: 'Invalid token' })
@@ -66,7 +70,7 @@ router.get('/user', async (req, res) => {
 })
 
 // Accept or reject booking (admin)
-router.patch('/:id/:action', async (req, res) => {
+router.patch('/:id/:action', auth('admin'), async (req, res) => {
   const { id, action } = req.params
   if (!['accept','reject'].includes(action)) return res.status(400).json({ error: 'Invalid action' })
   const booking = await Booking.findById(id)
@@ -107,14 +111,11 @@ router.patch('/:id/:action', async (req, res) => {
   res.json(booking)
 })
 
-router.get('/', async (_req, res) => {
-  const list = await Booking.find().sort({ createdAt: -1 })
-  res.json(list)
-})
+// (removed duplicate GET '/')
 
 
 // Delete booking by ID (admin)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth('admin'), async (req, res) => {
   const { id } = req.params
   // console.log('DELETE/api/bookings/:id called with id:', id)
   // console.log('id:this', id);
