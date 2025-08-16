@@ -3,7 +3,7 @@ import { Router } from 'express'
 import Booking from '../models/Booking.js'
 import Product from '../models/Product.js'
 import { sendEmail } from '../index.js'
-import { renderEmail, infoTable, pill } from '../emailTemplates.js'
+import { renderEmail, infoTable, pill, button, orderSummaryCard, sectionCard } from '../emailTemplates.js'
 
 const router = Router()
 
@@ -16,22 +16,26 @@ router.post('/', async (req, res) => {
   // email notify admin
   const product = await Product.findById(productId)
     const subject = `🪵 New Booking: ${product?.title || 'a product'} by ${name}`
-    const html = renderEmail({
+    const adminHtml = renderEmail({
       subjectEmoji: '🪵',
       title: 'New Booking Received',
       subtitle: pill('Admin Notification', '#fff', '#8d5524'),
-      contentHtml: infoTable([
-        ['🧰 Product:', `${product?.title} (${productId})`],
-        ['📂 Category:', product?.category],
-        ['💰 Price:', product?.price ? `₹${product.price}` : '-'],
-        ['👤 Name:', name],
-        ['📧 Email:', email],
-        ['📞 Phone:', phone],
-        ['💬 Message:', message || '-'],
-      ])
+      contentHtml: `
+        ${orderSummaryCard({ product, booking })}
+        ${sectionCard({
+          title: 'Customer Details',
+          bodyHtml: infoTable([
+            ['👤 Name:', name],
+            ['📧 Email:', email],
+            ['📞 Phone:', phone],
+            ['💬 Message:', message || '-'],
+          ])
+        })}
+        ${button('Open Admin Dashboard', (process.env.ADMIN_DASHBOARD_URL || '#'))}
+      `
     })
   // Always send to admin email
-  try { await sendEmail({ subject, html, to: process.env.EMAIL_TO }) } catch {}
+  try { await sendEmail({ subject, html: adminHtml, to: process.env.EMAIL_TO }) } catch {}
 
   res.json(booking)
 })
@@ -78,22 +82,23 @@ router.patch('/:id/:action', async (req, res) => {
       html = renderEmail({
         subjectEmoji: '✅',
         title: 'Your Order is Confirmed!',
-        contentHtml: infoTable([
-          ['🧰 Product:', product?.title],
-          ['📂 Category:', product?.category],
-          ['💰 Price:', product?.price ? `₹${product.price}` : '-'],
-          ['👤 Name:', booking.name],
-          ['📧 Email:', booking.email],
-          ['📞 Phone:', booking.phone],
-          ['💬 Message:', booking.message || '-'],
-        ])
+        subtitle: pill('Thank you for choosing us', '#fff', '#2e7d32'),
+        contentHtml: `
+          ${orderSummaryCard({ product, booking })}
+          ${button('View Your Orders', (process.env.USER_ORDERS_URL || '#'))}
+          <div style="color:#5c4326;font-size:13px;margin-top:10px">We will contact you soon to confirm delivery timelines.</div>
+        `
       })
     } else {
       subject = `Order Update: ${product?.title || 'a product'} was not approved`
       html = renderEmail({
         subjectEmoji: '❌',
         title: 'Booking Rejected',
-        contentHtml: `<p style="color:#5c4326;margin:0">Sorry, your booking for <b>${product?.title}</b> was not approved.</p>`
+        contentHtml: `
+          ${orderSummaryCard({ product, booking })}
+          <p style="color:#5c4326;margin:10px 0 0">Sorry, your booking for <b>${product?.title}</b> was not approved.</p>
+          ${button('Browse other products', (process.env.CLIENT_BASE_URL || '#'))}
+        `
       })
     }
   // (removed duplicate else block)

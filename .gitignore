@@ -26,6 +26,7 @@ server/dist/
 # Uploads (keep folder, ignore files)
 server/uploads/*
 !server/uploads/.gitkeep
+!server/uploads/logo.jpg
 
 # Caches
 .vite/
