@@ -23,6 +23,10 @@ dist/
 client/dist/
 server/dist/
 
+# Uploads (keep folder, ignore files)
+server/uploads/*
+!server/uploads/.gitkeep
+
 # Caches
 .vite/
 client/.vite/

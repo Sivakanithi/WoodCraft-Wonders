@@ -6,7 +6,7 @@ import { categoryImages } from '../categoryImages'
 
 export default function Works() {
   const [products, setProducts] = useState([])
-  const [selectedCategory, setSelectedCategory] = useState('Doors')
+  const [selectedCategory, setSelectedCategory] = useState(null)
 
   useEffect(() => {
     axios.get(import.meta.env.VITE_API_BASE + '/products').then(r => setProducts(r.data))
@@ -30,22 +30,26 @@ export default function Works() {
 
       {/* Category selector or back button */}
       {selectedCategory === null ? (
-        <div className="mb-8 flex flex-col gap-4">
+  <div className="mb-8 flex flex-col gap-2 sm:gap-4">
           {categoryRows.map((row, idx) => (
-            <div key={idx} className="flex gap-8 justify-center">
-              {row.map(cat => (
-                <button
+            <div key={idx} className="flex flex-col xs:flex-row gap-2 sm:gap-8 justify-center items-center">
+              {row.map((cat, i) => (
+                <div
                   key={cat}
-                  className={`relative flex flex-col items-center justify-center w-[400px] h-[400px] rounded-2xl border-4 shadow-xl transition-all duration-150 overflow-hidden p-0 bg-white border-stone-200 hover:border-amber-400`}
+                  className="relative flex flex-col items-center justify-center w-full xs:w-[220px] sm:w-[320px] md:w-[400px] h-[220px] sm:h-[320px] md:h-[400px] rounded-2xl border-4 shadow-xl transition-all duration-150 overflow-hidden p-0 bg-white border-stone-200 hover:border-amber-400 mb-2 xs:mb-0 cursor-pointer"
+                  role="button"
+                  aria-label={`View ${cat}`}
+                  tabIndex={0}
                   onClick={() => setSelectedCategory(cat)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCategory(cat) }}
                 >
                   <div className="w-full h-full flex flex-col items-center justify-center">
                     <img src={categoryImages[cat]} alt={cat} className="object-cover w-full h-full" />
-                    <div className="absolute bottom-0 left-0 w-full flex justify-center">
-                      <span className="font-semibold text-amber-900 text-xl bg-white/90 px-6 py-3 rounded-t-xl shadow-lg w-full text-center border-t-2 border-amber-300">{cat}</span>
-                    </div>
                   </div>
-                </button>
+                  <div className="absolute bottom-0 left-0 w-full flex justify-center">
+                    <span className="font-semibold text-amber-900 text-base sm:text-xl bg-white/90 px-2 sm:px-6 py-2 sm:py-3 rounded-t-xl shadow-lg w-full text-center border-t-2 border-amber-300">{cat}</span>
+                  </div>
+                </div>
               ))}
             </div>
           ))}

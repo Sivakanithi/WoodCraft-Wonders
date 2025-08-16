@@ -40,23 +40,46 @@ export default function AdminProducts() {
 
   return (
     <div>
-      <form onSubmit={addProduct} className="card grid md:grid-cols-2 gap-4" encType="multipart/form-data">
-        <input className="p-3 rounded-xl border" placeholder="Title" value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required />
-        <input className="p-3 rounded-xl border" placeholder="Price" value={form.price} onChange={e=>setForm({...form, price:e.target.value})} required />
-        <input className="p-3 rounded-xl border" placeholder="Dimensions" value={form.dimensions} onChange={e=>setForm({...form, dimensions:e.target.value})} />
-        <select className="p-3 rounded-xl border" value={form.category} onChange={e=>setForm({...form, category:e.target.value})}>
-          {['Doors','Cupboards','Sofa Sets','Chairs & Tables','Custom Designs'].map(c => <option key={c}>{c}</option>)}
-        </select>
-        <textarea className="p-3 rounded-xl border md:col-span-2" placeholder="Description" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} required />
-        <input type="file" name="image" className="md:col-span-2" accept="image/*" />
-        <button className="btn btn-primary md:col-span-2" type="submit">Add Product</button>
+      <form onSubmit={addProduct} className="card" encType="multipart/form-data">
+        <h3 className="text-lg font-semibold mb-4">Add Product</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          <div>
+            <label className="text-sm text-stone-600">Title</label>
+            <input className="mt-1 p-3 rounded-xl border w-full" placeholder="Elegant teak door" value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required />
+          </div>
+          <div>
+            <label className="text-sm text-stone-600">Price</label>
+            <input className="mt-1 p-3 rounded-xl border w-full" placeholder="₹ 15000" value={form.price} onChange={e=>setForm({...form, price:e.target.value})} required />
+          </div>
+          <div>
+            <label className="text-sm text-stone-600">Dimensions</label>
+            <input className="mt-1 p-3 rounded-xl border w-full" placeholder="6ft x 3ft" value={form.dimensions} onChange={e=>setForm({...form, dimensions:e.target.value})} />
+          </div>
+          <div>
+            <label className="text-sm text-stone-600">Category</label>
+            <select className="mt-1 p-3 rounded-xl border w-full" value={form.category} onChange={e=>setForm({...form, category:e.target.value})}>
+              {['Doors','Cupboards','Sofa Sets','Chairs & Tables','Custom Designs'].map(c => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-sm text-stone-600">Description</label>
+            <textarea className="mt-1 p-3 rounded-xl border w-full" rows={3} placeholder="Short description about the product" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} required />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-sm text-stone-600">Image</label>
+            <input type="file" name="image" className="mt-1 w-full" accept="image/*" />
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button className="btn btn-primary" type="submit">Add Product</button>
+        </div>
       </form>
       <div className="mt-8">
         <h2 className="text-xl font-bold mb-4">Products</h2>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
           {products.map(p => (
             <div key={p._id} className="card">
-              <div className="h-32 rounded-xl overflow-hidden bg-stone-100 mb-2 flex items-center justify-center">
+              <div className="h-28 sm:h-32 rounded-xl overflow-hidden bg-stone-100 mb-2 flex items-center justify-center">
                 {p.imageUrl ? <img src={p.imageUrl} className="object-cover w-full h-full" /> : 'No Image'}
               </div>
               <div className="font-bold">{p.title}</div>

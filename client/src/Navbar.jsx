@@ -50,12 +50,12 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white shadow sticky top-0 z-50">
-      <div className="container mx-auto flex items-center justify-between px-4 py-3">
+  <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-2 sm:py-3 gap-2 sm:gap-0">
   <Link to="/" className="flex items-center gap-2 text-xl font-bold text-brand-700">
     <img src={photos.gallery.logo || '/logo.jpg'} alt="WoodCraft Wonders Logo" className="w-8 h-8 rounded-full border-2 border-amber-700 bg-white shadow object-cover" />
     <span style={{ fontFamily: 'serif', letterSpacing: '2px', textShadow: '1px 1px 2px #b8860b' }}>WoodCraft Wonders</span>
   </Link>
-        <div className="flex gap-4 items-center relative">
+  <div className="flex flex-wrap gap-2 sm:gap-4 items-center relative w-full sm:w-auto justify-center sm:justify-end">
           <Link to="/" className="hover:text-brand-600 transition">Home</Link>
           <Link to="/about" className="hover:text-brand-600 transition">About</Link>
           <Link to="/works" className="hover:text-brand-600 transition">Works</Link>
@@ -63,17 +63,17 @@ export default function Navbar() {
           {user ? (
             <>
               {user.role === 'admin' && <Link to="/admin" className="btn btn-primary ml-2">Admin</Link>}
-              <button onClick={toggleMenu} className="ml-2 flex items-center gap-2">
+              <button onClick={toggleMenu} className="ml-2 flex items-center gap-2 min-w-[40px]" style={{minWidth:40}}>
                 <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
                   {(user.name || user.email || '?').charAt(0).toUpperCase()}
                 </span>
-                <span className="hidden sm:block max-w-[120px] truncate text-left">
+                <span className="hidden xs:inline-block max-w-[80px] sm:max-w-[120px] truncate text-left text-xs sm:text-base">
                   {user.name || user.email}
                 </span>
                 <svg className="w-4 h-4 text-stone-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-12 w-80 bg-white border rounded-xl shadow-xl p-4 z-50">
+                <div className="absolute right-0 top-12 w-[90vw] max-w-xs bg-white border rounded-xl shadow-xl p-4 z-50">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
                       {(user.name || user.email || '?').charAt(0).toUpperCase()}

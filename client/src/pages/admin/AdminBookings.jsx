@@ -54,8 +54,26 @@ export default function AdminBookings() {
     <div className="card">
       <Notification {...notif} onClose={() => setNotif(n => ({ ...n, show: false }))} />
       <h2 className="text-xl font-bold mb-4">Bookings</h2>
+      <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <input className="p-2 rounded-lg border" placeholder="Search name or email" onChange={(e)=>{
+          const q = e.target.value.toLowerCase();
+          axios.get(import.meta.env.VITE_API_BASE + '/bookings', { headers: { Authorization: `Bearer ${token}` }})
+            .then(r => setBookings(r.data.filter(b => (b.name+b.email).toLowerCase().includes(q))))
+        }} />
+        <select className="p-2 rounded-lg border" onChange={(e)=>{
+          const val = e.target.value
+          axios.get(import.meta.env.VITE_API_BASE + '/bookings', { headers: { Authorization: `Bearer ${token}` }})
+            .then(r => setBookings(val==='all'? r.data : r.data.filter(b => b.status===val)))
+        }}>
+          <option value="all">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button className="btn" onClick={load}>Reset</button>
+      </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+        <table className="min-w-[600px] w-full text-xs sm:text-sm">
           <thead>
             <tr>
               <th className="p-2">User Details</th>

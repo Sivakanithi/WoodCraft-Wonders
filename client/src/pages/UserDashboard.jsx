@@ -45,9 +45,9 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
+  <div className="max-w-4xl mx-auto py-4 sm:py-8 px-2 sm:px-0">
       <h1 className="text-2xl font-bold mb-6">Welcome, {user.name || user.email}</h1>
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-col xs:flex-row gap-2 xs:gap-4 mb-4 sm:mb-6">
         <button className={`btn ${tab==='dashboard'?'btn-primary':''}`} onClick={()=>setTab('dashboard')}>Dashboard</button>
         <button className={`btn ${tab==='profile'?'btn-primary':''}`} onClick={()=>setTab('profile')}>Profile</button>
       </div>
@@ -59,7 +59,7 @@ export default function UserDashboard() {
             <div className="text-stone-400">No orders yet.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <table className="min-w-[400px] w-full text-xs sm:text-sm">
                 <thead>
                   <tr>
                     <th className="p-2 text-left">Product</th>
