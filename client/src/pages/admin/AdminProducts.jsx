@@ -4,7 +4,7 @@ import { API_BASE } from '../../api'
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
-  const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Doors', dimensions: '' })
+  const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Doors', dimensions: '', imageUrl: '' })
   const token = localStorage.getItem('token')
 
   function load() {
@@ -17,12 +17,18 @@ export default function AdminProducts() {
     e.preventDefault()
     try {
       const fd = new FormData()
-      Object.entries(form).forEach(([k,v]) => fd.append(k, v))
+      // Normalize Google Drive links to direct file URL if user pasted a viewer link
+      let normalized = { ...form }
+      const driveMatch = /https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\//i.exec(normalized.imageUrl || '')
+      if (driveMatch) {
+        normalized.imageUrl = `https://drive.google.com/uc?id=${driveMatch[1]}`
+      }
+      Object.entries(normalized).forEach(([k,v]) => fd.append(k, v))
       if (e.target.image.files[0]) fd.append('image', e.target.image.files[0])
       await axios.post(API_BASE + '/products', fd, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setForm({ title: '', description: '', price: '', category: 'Doors', dimensions: '' })
+      setForm({ title: '', description: '', price: '', category: 'Doors', dimensions: '', imageUrl: '' })
       e.target.reset()
       load()
       alert('Product added')
@@ -69,6 +75,13 @@ export default function AdminProducts() {
           <div className="md:col-span-2">
             <label className="text-sm text-stone-600">Image</label>
             <input type="file" name="image" className="mt-1 w-full" accept="image/*" />
+            <div className="text-xs text-stone-500 mt-1">Or paste an image URL below (direct URL recommended). For Google Drive, paste the share link; we’ll try to convert it.</div>
+            <input
+              className="mt-2 p-3 rounded-xl border w-full"
+              placeholder="https://example.com/image.jpg or Google Drive link"
+              value={form.imageUrl}
+              onChange={e=>setForm({...form, imageUrl:e.target.value})}
+            />
           </div>
         </div>
         <div className="mt-4 flex justify-end">
@@ -81,7 +94,13 @@ export default function AdminProducts() {
           {products.map(p => (
             <div key={p._id} className="card">
               <div className="h-28 sm:h-32 rounded-xl overflow-hidden bg-stone-100 mb-2 flex items-center justify-center">
-                {p.imageUrl ? <img src={p.imageUrl} className="object-cover w-full h-full" /> : 'No Image'}
+                {p.imageUrl ? (
+                  <img
+                    src={p.imageUrl}
+                    className="object-cover w-full h-full"
+                    onError={(e)=>{ e.currentTarget.src='https://images.unsplash.com/photo-1507149833265-60c372daea22?auto=format&fit=crop&w=800&q=60' }}
+                  />
+                ) : 'No Image'}
               </div>
               <div className="font-bold">{p.title}</div>
               <div className="text-sm text-stone-600">{p.category}</div>

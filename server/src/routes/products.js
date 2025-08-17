@@ -57,7 +57,13 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth('admin'), upload.single('image'), async (req, res) => {
   const body = req.body
   const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
-  const imageUrl = req.file ? `${base.replace(/\/+$/, '')}/uploads/${req.file.filename}` : toAbsoluteImageUrl(body.imageUrl, base)
+  // Prefer uploaded file; else allow external imageUrl passed in body
+  let imageUrl
+  if (req.file) {
+    imageUrl = `${base.replace(/\/+$/, '')}/uploads/${req.file.filename}`
+  } else if (body.imageUrl) {
+    imageUrl = /^https?:\/\//i.test(body.imageUrl) ? body.imageUrl : toAbsoluteImageUrl(body.imageUrl, base)
+  }
   const created = await Product.create({ ...body, price: Number(body.price), imageUrl })
   // Return with absolute URL normalized
   const obj = created.toObject()
