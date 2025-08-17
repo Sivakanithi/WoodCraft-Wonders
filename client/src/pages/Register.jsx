@@ -12,7 +12,7 @@ export default function Register() {
 
   const onSubmit = async (data) => {
     try {
-  await axios.post(API_BASE + '/auth/register', data)
+      await axios.post(API_BASE + '/auth/register', data)
       setNotif({ show: true, message: 'Registration successful! Please login.', type: 'success' })
       setTimeout(() => navigate('/login'), 1200)
     } catch (e) {

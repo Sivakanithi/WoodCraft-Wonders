@@ -16,7 +16,7 @@ export default function Login() {
 
   const onSubmit = async (data) => {
     try {
-  const res = await axios.post(API_BASE + '/auth/login', data)
+      const res = await axios.post(API_BASE + '/auth/login', data)
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data.user))
       setNotif({ show: true, message: 'Logged in!', type: 'success' })
