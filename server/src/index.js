@@ -133,6 +133,27 @@ app.post('/api/admin/test-email', auth('admin'), async (req, res) => {
   }
 })
 
+// Lightweight proxy for Drive images to avoid viewer cookies/redirects
+app.get('/api/proxy-image', async (req, res) => {
+  try {
+    const target = req.query.url
+    if (!target || typeof target !== 'string') return res.status(400).send('url required')
+    const u = new URL(target)
+    const allowedHosts = new Set(['drive.google.com', 'lh3.googleusercontent.com'])
+    if (!allowedHosts.has(u.hostname)) return res.status(403).send('host not allowed')
+    const r = await fetch(target, { redirect: 'follow' })
+    if (!r.ok) return res.status(r.status).send('fetch failed')
+    const ctype = r.headers.get('content-type') || 'image/jpeg'
+    res.setHeader('Content-Type', ctype)
+    res.setHeader('Cache-Control', 'public, max-age=86400')
+    const buf = Buffer.from(await r.arrayBuffer())
+    res.send(buf)
+  } catch (e) {
+    console.error('proxy-image error:', e?.message || e)
+    res.status(500).send('proxy error')
+  }
+})
+
 // Lightweight image proxy for whitelisted hosts (e.g., Google Drive thumbnails)
 app.get('/api/proxy-image', async (req, res) => {
   try {

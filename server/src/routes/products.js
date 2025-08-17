@@ -83,23 +83,34 @@ router.post('/', auth('admin'), upload.single('image'), async (req, res) => {
   const body = req.body
   const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
   // Prefer uploaded file; else allow external imageUrl passed in body
-  let imageUrl
-  if (req.file) {
-    imageUrl = `${base.replace(/\/+$/, '')}/uploads/${req.file.filename}`
-  } else if (body.imageUrl) {
-    const ext = normalizeExternalUrl(body.imageUrl)
-    imageUrl = /^https?:\/\//i.test(ext) ? ext : toAbsoluteImageUrl(ext, base)
-  }
-  const created = await Product.create({ ...body, price: Number(body.price), imageUrl })
-  // Return with absolute URL normalized
-  const obj = created.toObject()
-  {
-    const norm = normalizeExternalUrl(obj.imageUrl)
-    obj.imageUrl = /drive\.google\.com/i.test(norm)
-      ? `${base.replace(/\/+$/, '')}/api/proxy-image?url=${encodeURIComponent(norm)}`
-      : toAbsoluteImageUrl(norm, base)
-  }
-  res.json(obj)
+        try {
+          const body = req.body || {}
+          const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
+          // Prefer uploaded file; else allow external imageUrl passed in body
+          let imageUrl
+          if (req.file) {
+            imageUrl = `${base.replace(/\/+$/, '')}/uploads/${req.file.filename}`
+          } else if (body.imageUrl) {
+            const ext = normalizeExternalUrl(body.imageUrl)
+            imageUrl = /^https?:\/\//i.test(ext) ? ext : toAbsoluteImageUrl(ext, base)
+          }
+          const price = body.price !== undefined ? Number(body.price) : undefined
+          const created = await Product.create({
+            title: body.title,
+            description: body.description,
+            dimensions: body.dimensions,
+            category: body.category,
+            price,
+            imageUrl
+          })
+          // Return with absolute URL normalized
+          const obj = created.toObject()
+          obj.imageUrl = toAbsoluteImageUrl(normalizeExternalUrl(obj.imageUrl), base)
+          res.json(obj)
+        } catch (err) {
+          console.error('Create product failed:', err?.message || err)
+          res.status(400).json({ error: err?.message || 'Failed to add product' })
+        }
 })
 
 router.delete('/:id', auth('admin'), async (req, res) => {
