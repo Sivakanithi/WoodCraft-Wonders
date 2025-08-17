@@ -19,6 +19,12 @@ function toAbsoluteImageUrl(img, base) {
   if (!img || typeof img !== 'string') return img
   // Already absolute (http or https)
   if (/^https?:\/\//i.test(img)) return img
+  // If someone stored a full localhost URL, normalize to base
+  if (/^https?:\/\/localhost(?::\d+)?\//i.test(img)) {
+    const normBase = String(base || '').replace(/\/+$/, '')
+    const tail = img.split(/localhost(?::\d+)?/i)[1] || ''
+    return `${normBase}${tail.startsWith('/') ? '' : '/'}${tail}`
+  }
   // Strip leading slashes to avoid double slashes when joining
   const cleaned = img.replace(/^\/+/, '')
   // Ensure we only ever serve from /uploads

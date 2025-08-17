@@ -31,7 +31,12 @@ export default function ProductDetails() {
   return (
     <div className="grid md:grid-cols-2 gap-8">
       <div className="card">
-        <img src={product.imageUrl} alt={product.title} className="rounded-xl w-full object-cover" />
+        <img
+          src={product.imageUrl}
+          alt={product.title}
+          className="rounded-xl w-full object-cover"
+          onError={(e)=>{ e.currentTarget.src = 'https://images.unsplash.com/photo-1507149833265-60c372daea22?auto=format&fit=crop&w=1200&q=60' }}
+        />
         <h1 className="text-2xl font-bold mt-3">{product.title}</h1>
         <p className="text-stone-700 mt-2">{product.description}</p>
         <div className="mt-2 text-sm">Dimensions: {product.dimensions || 'N/A'}</div>

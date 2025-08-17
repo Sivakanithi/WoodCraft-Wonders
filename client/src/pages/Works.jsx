@@ -85,6 +85,7 @@ export default function Works() {
                       src={p.imageUrl ? p.imageUrl : categoryImages[selectedCategory]}
                       alt={p.title}
                       className="object-cover w-full h-full"
+                      onError={(e)=>{ e.currentTarget.src = categoryImages[selectedCategory]; }}
                     />
                   </div>
                   <div className="p-4 w-full flex flex-col flex-1">

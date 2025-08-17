@@ -10,6 +10,7 @@ import productRoutes from './routes/products.js'
 import bookingRoutes from './routes/bookings.js'
 import { renderEmail, infoTable, pill } from './emailTemplates.js'
 import { auth } from './middleware/auth.js'
+import fs from 'fs'
 
 const app = express()
 // Ensure Express respects X-Forwarded-* headers (needed on Render/behind proxy)
@@ -17,6 +18,8 @@ app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))
+// Ensure uploads directory exists
+try { if (!fs.existsSync('uploads')) fs.mkdirSync('uploads', { recursive: true }) } catch {}
 app.use('/uploads', express.static('uploads'))
 
 const PORT = process.env.PORT || 4000
