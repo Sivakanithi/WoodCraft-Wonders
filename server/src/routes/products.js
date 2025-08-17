@@ -22,7 +22,7 @@ function normalizeExternalUrl(u) {
       const m1 = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
       const m2 = u.match(/[?&]id=([a-zA-Z0-9_-]+)/)
       const id = (m1 && m1[1]) || (m2 && m2[1])
-      if (id) return `https://drive.google.com/uc?export=view&id=${id}`
+  if (id) return `https://drive.google.com/uc?export=view&id=${id}`
     }
   } catch {}
   return u
@@ -55,7 +55,11 @@ router.get('/', async (req, res) => {
   const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
   const patched = items.map(it => {
     const obj = it.toObject()
-  obj.imageUrl = toAbsoluteImageUrl(normalizeExternalUrl(obj.imageUrl), base)
+    const norm = normalizeExternalUrl(obj.imageUrl)
+    // Route drive links via proxy for reliability
+    obj.imageUrl = /drive\.google\.com/i.test(norm)
+      ? `${base.replace(/\/+$/, '')}/api/proxy-image?url=${encodeURIComponent(norm)}`
+      : toAbsoluteImageUrl(norm, base)
     return obj
   })
   res.json(patched)
@@ -66,7 +70,12 @@ router.get('/:id', async (req, res) => {
   if (!item) return res.status(404).json({ error: 'Not found' })
   const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
   const obj = item.toObject()
-  obj.imageUrl = toAbsoluteImageUrl(normalizeExternalUrl(obj.imageUrl), base)
+  {
+    const norm = normalizeExternalUrl(obj.imageUrl)
+    obj.imageUrl = /drive\.google\.com/i.test(norm)
+      ? `${base.replace(/\/+$/, '')}/api/proxy-image?url=${encodeURIComponent(norm)}`
+      : toAbsoluteImageUrl(norm, base)
+  }
   res.json(obj)
 })
 
@@ -84,7 +93,12 @@ router.post('/', auth('admin'), upload.single('image'), async (req, res) => {
   const created = await Product.create({ ...body, price: Number(body.price), imageUrl })
   // Return with absolute URL normalized
   const obj = created.toObject()
-  obj.imageUrl = toAbsoluteImageUrl(normalizeExternalUrl(obj.imageUrl), base)
+  {
+    const norm = normalizeExternalUrl(obj.imageUrl)
+    obj.imageUrl = /drive\.google\.com/i.test(norm)
+      ? `${base.replace(/\/+$/, '')}/api/proxy-image?url=${encodeURIComponent(norm)}`
+      : toAbsoluteImageUrl(norm, base)
+  }
   res.json(obj)
 })
 

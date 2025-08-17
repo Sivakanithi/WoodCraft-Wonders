@@ -132,3 +132,24 @@ app.post('/api/admin/test-email', auth('admin'), async (req, res) => {
     res.status(500).json({ ok: false, error: e?.message || String(e) })
   }
 })
+
+// Lightweight image proxy for whitelisted hosts (e.g., Google Drive thumbnails)
+app.get('/api/proxy-image', async (req, res) => {
+  try {
+    const raw = req.query.url
+    if (!raw || typeof raw !== 'string') return res.status(400).send('Missing url')
+    let url
+    try { url = new URL(raw) } catch { return res.status(400).send('Invalid url') }
+    const allow = ['drive.google.com', 'lh3.googleusercontent.com', 'lh4.googleusercontent.com', 'lh5.googleusercontent.com', 'lh6.googleusercontent.com']
+    if (!allow.includes(url.hostname)) return res.status(403).send('Host not allowed')
+    const r = await fetch(url, { redirect: 'follow' })
+    if (!r.ok) return res.status(r.status).send('Upstream error')
+    const ct = r.headers.get('content-type') || 'image/jpeg'
+    res.setHeader('Content-Type', ct)
+    res.setHeader('Cache-Control', 'public, max-age=86400')
+    const buf = Buffer.from(await r.arrayBuffer())
+    res.send(buf)
+  } catch (e) {
+    res.status(500).send('Proxy error')
+  }
+})
