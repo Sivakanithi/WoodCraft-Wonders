@@ -11,6 +11,8 @@ import bookingRoutes from './routes/bookings.js'
 import { renderEmail, infoTable, pill } from './emailTemplates.js'
 
 const app = express()
+// Ensure Express respects X-Forwarded-* headers (needed on Render/behind proxy)
+app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))

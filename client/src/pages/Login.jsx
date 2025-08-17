@@ -19,6 +19,8 @@ export default function Login() {
       const res = await axios.post(API_BASE + '/auth/login', data)
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data.user))
+  // Notify listeners in this tab (Navbar) to refresh user state
+  try { window.dispatchEvent(new Event('storage')) } catch {}
       setNotif({ show: true, message: 'Logged in!', type: 'success' })
       setTimeout(() => navigate(res.data.user.role === 'admin' ? '/admin' : '/'), 1200)
     } catch (e) {

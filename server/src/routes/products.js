@@ -14,14 +14,26 @@ const storage = multer.diskStorage({
 })
 const upload = multer({ storage })
 
-router.get('/', async (_req, res) => {
+// Helper to convert image paths to absolute URLs consistently
+function toAbsoluteImageUrl(img, base) {
+  if (!img || typeof img !== 'string') return img
+  // Already absolute (http or https)
+  if (/^https?:\/\//i.test(img)) return img
+  // Strip leading slashes to avoid double slashes when joining
+  const cleaned = img.replace(/^\/+/, '')
+  // Ensure we only ever serve from /uploads
+  const rel = cleaned.startsWith('uploads/') ? cleaned : `uploads/${cleaned}`
+  // Ensure base has no trailing slash
+  const normBase = String(base || '').replace(/\/+$/, '')
+  return `${normBase}/${rel}`
+}
+
+router.get('/', async (req, res) => {
   const items = await Product.find().sort({ createdAt: -1 })
-  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || ''
+  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
   const patched = items.map(it => {
     const obj = it.toObject()
-    if (obj.imageUrl && typeof obj.imageUrl === 'string' && obj.imageUrl.startsWith('/')) {
-      obj.imageUrl = `${base}${obj.imageUrl}`
-    }
+    obj.imageUrl = toAbsoluteImageUrl(obj.imageUrl, base)
     return obj
   })
   res.json(patched)
@@ -30,20 +42,21 @@ router.get('/', async (_req, res) => {
 router.get('/:id', async (req, res) => {
   const item = await Product.findById(req.params.id)
   if (!item) return res.status(404).json({ error: 'Not found' })
-  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || ''
+  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
   const obj = item.toObject()
-  if (obj.imageUrl && typeof obj.imageUrl === 'string' && obj.imageUrl.startsWith('/')) {
-    obj.imageUrl = `${base}${obj.imageUrl}`
-  }
+  obj.imageUrl = toAbsoluteImageUrl(obj.imageUrl, base)
   res.json(obj)
 })
 
 router.post('/', auth('admin'), upload.single('image'), async (req, res) => {
   const body = req.body
-  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || ('http://localhost:'+ (process.env.PORT||4000))
-  const imageUrl = req.file ? `${base}/uploads/${req.file.filename}` : undefined
+  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
+  const imageUrl = req.file ? `${base.replace(/\/+$/, '')}/uploads/${req.file.filename}` : toAbsoluteImageUrl(body.imageUrl, base)
   const created = await Product.create({ ...body, price: Number(body.price), imageUrl })
-  res.json(created)
+  // Return with absolute URL normalized
+  const obj = created.toObject()
+  obj.imageUrl = toAbsoluteImageUrl(obj.imageUrl, base)
+  res.json(obj)
 })
 
 router.delete('/:id', auth('admin'), async (req, res) => {

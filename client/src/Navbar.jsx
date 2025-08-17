@@ -17,9 +17,13 @@ export default function Navbar() {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  // Close profile menu on route change
+  // Close profile menu and refresh user on route change (helps after login)
   useEffect(() => {
     if (menuOpen) setMenuOpen(false)
+    const latest = JSON.parse(localStorage.getItem('user') || 'null')
+    if ((latest?.email || latest?.role) && latest?.email !== user?.email) {
+      setUser(latest)
+    }
   }, [location.pathname])
 
   function logout() {
