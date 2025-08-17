@@ -14,9 +14,25 @@ const storage = multer.diskStorage({
 })
 const upload = multer({ storage })
 
+// Helper to normalize external URLs (e.g., Google Drive) to direct image links
+function normalizeExternalUrl(u) {
+  if (!u || typeof u !== 'string') return u
+  try {
+    if (/drive\.google\.com/i.test(u)) {
+      const m1 = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
+      const m2 = u.match(/[?&]id=([a-zA-Z0-9_-]+)/)
+      const id = (m1 && m1[1]) || (m2 && m2[1])
+      if (id) return `https://drive.google.com/uc?export=view&id=${id}`
+    }
+  } catch {}
+  return u
+}
+
 // Helper to convert image paths to absolute URLs consistently
 function toAbsoluteImageUrl(img, base) {
   if (!img || typeof img !== 'string') return img
+  // Normalize known external providers first
+  img = normalizeExternalUrl(img)
   // Already absolute (http or https)
   if (/^https?:\/\//i.test(img)) return img
   // If someone stored a full localhost URL, normalize to base
@@ -39,7 +55,7 @@ router.get('/', async (req, res) => {
   const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
   const patched = items.map(it => {
     const obj = it.toObject()
-    obj.imageUrl = toAbsoluteImageUrl(obj.imageUrl, base)
+  obj.imageUrl = toAbsoluteImageUrl(normalizeExternalUrl(obj.imageUrl), base)
     return obj
   })
   res.json(patched)
@@ -50,7 +66,7 @@ router.get('/:id', async (req, res) => {
   if (!item) return res.status(404).json({ error: 'Not found' })
   const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || `${req.protocol}://${req.get('host')}`
   const obj = item.toObject()
-  obj.imageUrl = toAbsoluteImageUrl(obj.imageUrl, base)
+  obj.imageUrl = toAbsoluteImageUrl(normalizeExternalUrl(obj.imageUrl), base)
   res.json(obj)
 })
 
@@ -62,12 +78,13 @@ router.post('/', auth('admin'), upload.single('image'), async (req, res) => {
   if (req.file) {
     imageUrl = `${base.replace(/\/+$/, '')}/uploads/${req.file.filename}`
   } else if (body.imageUrl) {
-    imageUrl = /^https?:\/\//i.test(body.imageUrl) ? body.imageUrl : toAbsoluteImageUrl(body.imageUrl, base)
+    const ext = normalizeExternalUrl(body.imageUrl)
+    imageUrl = /^https?:\/\//i.test(ext) ? ext : toAbsoluteImageUrl(ext, base)
   }
   const created = await Product.create({ ...body, price: Number(body.price), imageUrl })
   // Return with absolute URL normalized
   const obj = created.toObject()
-  obj.imageUrl = toAbsoluteImageUrl(obj.imageUrl, base)
+  obj.imageUrl = toAbsoluteImageUrl(normalizeExternalUrl(obj.imageUrl), base)
   res.json(obj)
 })
 
