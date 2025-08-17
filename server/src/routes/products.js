@@ -16,17 +16,32 @@ const upload = multer({ storage })
 
 router.get('/', async (_req, res) => {
   const items = await Product.find().sort({ createdAt: -1 })
-  res.json(items)
+  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || ''
+  const patched = items.map(it => {
+    const obj = it.toObject()
+    if (obj.imageUrl && typeof obj.imageUrl === 'string' && obj.imageUrl.startsWith('/')) {
+      obj.imageUrl = `${base}${obj.imageUrl}`
+    }
+    return obj
+  })
+  res.json(patched)
 })
 
 router.get('/:id', async (req, res) => {
   const item = await Product.findById(req.params.id)
-  res.json(item)
+  if (!item) return res.status(404).json({ error: 'Not found' })
+  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || ''
+  const obj = item.toObject()
+  if (obj.imageUrl && typeof obj.imageUrl === 'string' && obj.imageUrl.startsWith('/')) {
+    obj.imageUrl = `${base}${obj.imageUrl}`
+  }
+  res.json(obj)
 })
 
 router.post('/', auth('admin'), upload.single('image'), async (req, res) => {
   const body = req.body
-  const imageUrl = req.file ? `${process.env.BASE_URL || ('http://localhost:'+ (process.env.PORT||4000))}/uploads/${req.file.filename}` : undefined
+  const base = process.env.PUBLIC_BASE_URL || process.env.BASE_URL || ('http://localhost:'+ (process.env.PORT||4000))
+  const imageUrl = req.file ? `${base}/uploads/${req.file.filename}` : undefined
   const created = await Product.create({ ...body, price: Number(body.price), imageUrl })
   res.json(created)
 })

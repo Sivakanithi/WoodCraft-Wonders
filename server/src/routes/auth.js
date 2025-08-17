@@ -29,7 +29,7 @@ router.post('/register', async (req, res) => {
   if (await User.findOne({ email })) return res.status(400).json({ error: 'Email already in use' })
   const passwordHash = bcrypt.hashSync(password, 10)
   const user = await User.create({ email, passwordHash, role: 'user', name })
-  res.json({ message: 'Registered', user: { id: user._id, email: user.email, role: user.role } })
+  res.json({ message: 'Registered', user: { id: user._id, email: user.email, role: user.role, name: user.name || '' } })
 })
 
 router.post('/login', async (req, res) => {
@@ -40,7 +40,7 @@ router.post('/login', async (req, res) => {
   const ok = bcrypt.compareSync(password, user.passwordHash)
   if (!ok) return res.status(400).json({ error: 'Invalid credentials' })
   const token = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' })
-  res.json({ token, user: { id: user._id, email: user.email, role: user.role } })
+  res.json({ token, user: { id: user._id, email: user.email, role: user.role, name: user.name || '' } })
 })
 
 export default router
