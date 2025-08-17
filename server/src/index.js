@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js'
 import productRoutes from './routes/products.js'
 import bookingRoutes from './routes/bookings.js'
 import { renderEmail, infoTable, pill } from './emailTemplates.js'
+import { auth } from './middleware/auth.js'
 
 const app = express()
 // Ensure Express respects X-Forwarded-* headers (needed on Render/behind proxy)
@@ -58,28 +59,73 @@ app.post('/api/contact', async (req, res) => {
 // Email helper
 import nodemailer from 'nodemailer'
 async function sendEmail({ subject, html, to }) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log('Email disabled. Set EMAIL_USER and EMAIL_PASS to enable.')
+  // Build transport from env
+  const { EMAIL_USER, EMAIL_PASS, EMAIL_FROM, EMAIL_TO, EMAIL_HOST, EMAIL_PORT, EMAIL_SECURE, SMTP_URL, EMAIL_SERVICE } = process.env
+  if (!(SMTP_URL || EMAIL_HOST || (EMAIL_USER && EMAIL_PASS))) {
+    console.log('Email disabled. Set either SMTP_URL, or EMAIL_HOST(+PORT) with EMAIL_USER/EMAIL_PASS, or Gmail EMAIL_USER/EMAIL_PASS.')
     return
   }
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-  })
+  let transporter
   try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-      to: to || process.env.EMAIL_TO || process.env.EMAIL_USER,
-      subject, html
-    })
-    console.log('Email sent:', info.response)
-    console.log('To:', to || process.env.EMAIL_TO || process.env.EMAIL_USER)
-    console.log('Subject:', subject)
+    if (SMTP_URL) {
+      transporter = nodemailer.createTransport(SMTP_URL)
+    } else if (EMAIL_HOST) {
+      transporter = nodemailer.createTransport({
+        host: EMAIL_HOST,
+        port: EMAIL_PORT ? Number(EMAIL_PORT) : 587,
+        secure: String(EMAIL_SECURE||'').toLowerCase() === 'true' || (EMAIL_PORT && Number(EMAIL_PORT) === 465),
+        auth: EMAIL_USER && EMAIL_PASS ? { user: EMAIL_USER, pass: EMAIL_PASS } : undefined
+      })
+    } else {
+      // Default to Gmail service using app password
+      transporter = nodemailer.createTransport({
+        service: EMAIL_SERVICE || 'gmail',
+        auth: { user: EMAIL_USER, pass: EMAIL_PASS }
+      })
+    }
+  } catch (e) {
+    console.error('Email transport creation failed:', e?.message || e)
+    return
+  }
+  const mail = {
+    from: EMAIL_FROM || EMAIL_USER,
+    to: to || EMAIL_TO || EMAIL_USER,
+    subject: subject || '(no subject)',
+    html: html || '<div>No content</div>'
+  }
+  try {
+    // Optional verify (fast failure if creds invalid)
+    await transporter.verify().catch(()=>{})
+    const info = await transporter.sendMail(mail)
+    console.log('Email sent:', info && (info.response || info.messageId))
+    console.log('To:', mail.to)
+    console.log('Subject:', mail.subject)
   } catch (err) {
-    console.error('Email send error:', err)
-    console.error('Email details:', { to, subject })
+    console.error('Email send error:', err && (err.response || err.message || err))
+    console.error('Email details:', { to: mail.to, subject: mail.subject })
   }
 }
 export { sendEmail }
 
 app.listen(PORT, () => console.log('API running on port', PORT))
+
+// Admin-only test email endpoint to validate configuration
+app.post('/api/admin/test-email', auth('admin'), async (req, res) => {
+  try {
+    const to = (req.body && req.body.to) || process.env.EMAIL_TO || process.env.EMAIL_USER
+    const html = renderEmail({
+      subjectEmoji: '✉️',
+      title: 'Test Email',
+      subtitle: pill('Admin Triggered', '#fff', '#8d5524'),
+      contentHtml: infoTable([
+        ['Environment:', process.env.RENDER ? 'Render' : 'Local'],
+        ['To:', to],
+        ['Transport:', process.env.SMTP_URL ? 'SMTP_URL' : (process.env.EMAIL_HOST ? 'SMTP_HOST' : (process.env.EMAIL_SERVICE || 'gmail'))]
+      ])
+    })
+    await sendEmail({ subject: 'Test email from WoodCraft Wonders', html, to })
+    res.json({ ok: true, to })
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e?.message || String(e) })
+  }
+})
