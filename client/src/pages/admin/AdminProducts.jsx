@@ -6,6 +6,7 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([])
   const [broken, setBroken] = useState({}) // track image load failures by product id
   const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Doors', dimensions: '', imageUrl: '' })
+  const [submitting, setSubmitting] = useState(false)
   const token = localStorage.getItem('token')
   const CLD_CLOUD = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
   const CLD_PRESET = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
@@ -18,6 +19,8 @@ export default function AdminProducts() {
 
   async function addProduct(e) {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       const file = e.target.image.files && e.target.image.files[0]
       // If Cloudinary config exists and a file is chosen, upload directly to Cloudinary
@@ -30,7 +33,7 @@ export default function AdminProducts() {
         if (!resp.ok || !data.secure_url) {
           throw new Error(data.error?.message || 'Cloudinary upload failed')
         }
-        const payload = { ...form, imageUrl: data.secure_url }
+        const payload = { ...form, price: Number(form.price), imageUrl: data.secure_url }
         await axios.post(API_BASE + '/products', payload, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -43,6 +46,8 @@ export default function AdminProducts() {
         if (driveMatch) {
           normalized.imageUrl = `https://drive.google.com/uc?id=${driveMatch[1]}`
         }
+        // Ensure numeric price in payload
+        normalized.price = Number(normalized.price)
         Object.entries(normalized).forEach(([k,v]) => fd.append(k, v))
         if (file) fd.append('image', file)
         await axios.post(API_BASE + '/products', fd, {
@@ -54,8 +59,11 @@ export default function AdminProducts() {
       load()
       alert('Product added')
     } catch (err) {
-      console.error(err); alert('Failed to add')
+      console.error(err)
+      const msg = err?.response?.data?.error || err?.message || 'Failed to add'
+      alert(`Failed to add: ${msg}`)
     }
+    finally { setSubmitting(false) }
   }
 
   async function remove(id) {
@@ -111,7 +119,9 @@ export default function AdminProducts() {
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <button className="btn btn-primary" type="submit">Add Product</button>
+          <button className="btn btn-primary disabled:opacity-60" type="submit" disabled={submitting}>
+            {submitting ? 'Adding…' : 'Add Product'}
+          </button>
         </div>
       </form>
       <div className="mt-8">
